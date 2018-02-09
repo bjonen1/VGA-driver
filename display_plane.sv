@@ -59,7 +59,7 @@ module display_plane(input clock, input [23:0] ROM_data, input reset, input [9:0
 		
 		case (state)
 			idle: begin	
-				if (wrusedw < 10'd500)
+				if (wrusedw < 500)
 					next_state = write;
 				else 
 					next_state = idle;
@@ -95,24 +95,46 @@ module display_plane_TB();
 	reg clock;
 	wire [23:0] ROM_data;
 	reg reset;
-    reg[9:0] wrusedw;
+    //reg[9:0] wrusedw;
 	
 	wire[12:0] address;
 	wire [23:0] FIFO_data;
 	wire wrreq;
 	
+	//new for FIFO instead of TB control
+	reg rdclk, rdreq;
+	wire [23:0] q;
+	wire rdempty,wrfull;
+	wire [9:0] rdusedw;
+	wire [9:0] wrusedw;
+	
+
+	
 	display_plane display_plane1(clock,ROM_data,reset,wrusedw,address, FIFO_data, wrreq);
 	ROM2 rom2(address, clock, ROM_data);
+	FIFO2 FIFO2(FIFO_data,rdclk,rdreq,clock,wrreq,q,rdempty,rdusedw,wrfull,wrusedw);
+	
 	initial begin
 		clock = 0;
 		reset =1;
 
-		wrusedw = 10'd0;
+		
+		//new
+		rdclk = 0;
+		rdreq = 0;
 		
 		repeat (5) @(posedge clock);
 		reset = 0;
+		repeat (3000) @(posedge clock);
+		rdreq = 1;
+		repeat (100) @(posedge clock);
+		
+		//rdreq = 0;
 	end
 		
 	always
-	#1 clock =~ clock;
+	#2 clock =~ clock;
+	
+	always
+	#1 rdclk =~ rdclk;
 endmodule
