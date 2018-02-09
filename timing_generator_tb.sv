@@ -24,7 +24,7 @@ wire match_sync_n = (expected_sync_n) ^ sync_n ? 0 : 1;
 reg active_video;
 
 reg [23:0] screen [640][480];
-
+int frame;
 timing_generator DUT(  
     .clk(clk),
     .rst(rst),
@@ -58,7 +58,7 @@ initial begin
 
     
    //active video
-repeat(10) begin
+for (frame = 0; frame < 10; frame = frame + 1) begin
    fork
 
     begin
@@ -97,10 +97,12 @@ repeat(10) begin
    begin
    repeat (480) begin
         active_video = 1;
-        if(red != fifo_data[23:16]) $display("red incorrect. not data during active video at %d, is %x", $time/10, red);
+        
+        if(red != fifo_data[23:16]) $display("red incorrect. not data during active video at %d, is %x,  should be %x", $time/10, red, fifo_data[23:16]);
         //else $display("red correct!  %d", $time/10);
-        wait_num_pixel(640);
+        wait_num_pixel(639);
         active_video = 0;
+        wait_num_pixel(1);
         if(red != 0) $display("red incorrect. not 0 during front porch at %d, is %x", $time/10, red);
         //else $display("red correct! %d", $time/10);
         wait_num_pixel(16);
@@ -115,8 +117,8 @@ repeat(10) begin
    
       begin
       repeat (480) begin
-
-        if(blue != fifo_data[7:0]) $display("blue incorrect. not data during active video at %d, is %x", $time/10, blue);
+        #1
+        if(blue != fifo_data[7:0]) $display("blue incorrect. not data during active video at %d, is %x, should be %x", $time/10, blue, fifo_data[7:0]);
         //else $display("blue correct!  %d", $time/F0);
         wait_num_pixel(640);
         if(blue != 0) $display("blue incorrect. not 0 during front porch at %d, is %x", $time/10, blue);
@@ -134,7 +136,7 @@ repeat(10) begin
       begin
       repeat (480) begin
       
-        if(green != fifo_data[15:8]) $display("green incorrect. not 1 during active video at %d, is %d", $time/10, green);
+        if(green != fifo_data[15:8]) $display("green incorrect. not 1 during active video at %d, is %x, should be %x", $time/10, green, fifo_data[15:8]);
         //else $display("green correct!  %d", $time/10);
         wait_num_pixel(640);
         if(green != 0) $display("green incorrect. not 1 during front porch at %d, is %x", $time/10, green);
@@ -171,18 +173,16 @@ repeat(10) begin
 
     end
 
-    begin
 
-        repeat (480*8000) @(negedge clk) begin
-             if(active_video)
-             fifo_data = fifo_data + 1;
-        end
-    end
    join
-$display("complete");
+$display("completed one frame %d", frame);
 end
 end
 
+always @(negedge clk) begin
+        if(active_video)
+        fifo_data = fifo_data + 1;
+end
 
 int i,j;
 int expected;
@@ -208,13 +208,16 @@ initial begin
             if(screen[i][j] != expected) begin 
                 #1 
                 $display("error on screen index %d %d. Should be %d, is %d", i, j, expected, screen[i][j]);
+                while(1) #1;
             end
             expected = 1 + expected;
-            if(screen[i][j] == 0 && i !=0 ) while(1) #1;
 
          end
 
     end
+    
+    $display("finished checking the first frame!");
+    while(1) #1;
 end
 
 always #5 clk = ~clk;

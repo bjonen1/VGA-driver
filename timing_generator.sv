@@ -7,7 +7,7 @@ The active video begins the clock cycle after the fifo becomes not empty.s
 
 */
 localparam H_UPPER_BOUND =800 - 1;
-localparam V_UPPER_BOUND =525*H_UPPER_BOUND - 1;
+localparam V_UPPER_BOUND =525*(H_UPPER_BOUND+1) - 1;
 
 
 localparam H_ACTIVE_VIDEO_COUNT =640 - 1;
@@ -15,10 +15,10 @@ localparam H_FRONT_PORCH_COUNT =16- 1;
 localparam H_SYNC_PULSE_COUNT =96- 1;
 localparam H_BACK_PORCH_COUNT =48- 1;
 
-localparam V_ACTIVE_VIDEO_COUNT= 480*H_UPPER_BOUND- 1;
-localparam V_FRONT_PORCH_COUNT =10*H_UPPER_BOUND- 1;
-localparam V_SYNC_PULSE_COUNT =2*H_UPPER_BOUND- 1;
-localparam V_BACK_PORCH_COUNT =33*H_UPPER_BOUND- 1;
+localparam V_ACTIVE_VIDEO_COUNT= 480*(H_UPPER_BOUND+1)- 1;
+localparam V_FRONT_PORCH_COUNT =10*(H_UPPER_BOUND+1)- 1;
+localparam V_SYNC_PULSE_COUNT =2*(H_UPPER_BOUND+1)- 1;
+localparam V_BACK_PORCH_COUNT =33*(H_UPPER_BOUND+1)- 1;
 
 
 
