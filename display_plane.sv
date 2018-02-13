@@ -13,15 +13,16 @@ module display_plane(input clock, input [23:0] ROM_data, input reset, input [9:0
 	always_ff @(posedge clock, posedge reset)
 		if (reset)begin
 			state<=idle;
-			address<=24'h0;
+			address<=13'h0;
 			pxl_cnt <= 0;
 			vert_cnt <= 0;
 			hor_cnt <= 0;
 		end
 		else begin
 			state <= next_state;
-			
-			if (incr_address)
+			if (incr_address && address == 4799)
+				address <= 0;
+			else if(incr_address)
 				address <= address+1;
 			else if (incr_vert_cnt)
 				address <= address - 79; //go back to beginning of the horizontal line
@@ -59,6 +60,7 @@ module display_plane(input clock, input [23:0] ROM_data, input reset, input [9:0
 		
 		case (state)
 			idle: begin	
+				FIFO_data = 0; //added this when Quartus said inferring latch
 				if (wrusedw < 500)
 					next_state = write;
 				else 

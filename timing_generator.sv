@@ -7,7 +7,7 @@ The active video begins the clock cycle after the fifo becomes not empty.s
 
 */
 localparam H_UPPER_BOUND =800 - 1;
-localparam V_UPPER_BOUND =525*H_UPPER_BOUND - 1;
+localparam V_UPPER_BOUND =525*(H_UPPER_BOUND+1) - 1;
 
 
 localparam H_ACTIVE_VIDEO_COUNT =640 - 1;
@@ -15,10 +15,10 @@ localparam H_FRONT_PORCH_COUNT =16- 1;
 localparam H_SYNC_PULSE_COUNT =96- 1;
 localparam H_BACK_PORCH_COUNT =48- 1;
 
-localparam V_ACTIVE_VIDEO_COUNT= 480*H_UPPER_BOUND- 1;
-localparam V_FRONT_PORCH_COUNT =10*H_UPPER_BOUND- 1;
-localparam V_SYNC_PULSE_COUNT =2*H_UPPER_BOUND- 1;
-localparam V_BACK_PORCH_COUNT =33*H_UPPER_BOUND- 1;
+localparam V_ACTIVE_VIDEO_COUNT= 480*(H_UPPER_BOUND+1)- 1;
+localparam V_FRONT_PORCH_COUNT =10*(H_UPPER_BOUND+1)- 1;
+localparam V_SYNC_PULSE_COUNT =2*(H_UPPER_BOUND+1)- 1;
+localparam V_BACK_PORCH_COUNT =33*(H_UPPER_BOUND+1)- 1;
 
 
 
@@ -67,7 +67,7 @@ always @(posedge clk, posedge rst) begin
     else H_counter <= H_counter + 1;
 
 end
-assign active_video_condition =  (V_counter >= 0) && (H_counter <= H_ACTIVE_VIDEO_COUNT) && (V_counter <= V_ACTIVE_VIDEO_COUNT);
+assign active_video_condition =  (H_counter >= 0) && (V_counter >= 0) && (H_counter <= H_ACTIVE_VIDEO_COUNT) && (V_counter <= V_ACTIVE_VIDEO_COUNT);
 
 assign fifo_rreq = active_video_condition ? 1 : 0;
 reg [23:0] pixel_data;
@@ -85,7 +85,7 @@ assign red = (active_video_condition) ? pixel_data[23:16] : 0;
 assign green = (active_video_condition) ? pixel_data[15:8] : 0;
 assign blue = (active_video_condition) ? pixel_data[7:0] : 0;
 
-assign blank_n = (H_counter >= 0) && ((H_counter > H_ACTIVE_VIDEO_COUNT) || (V_counter > V_ACTIVE_VIDEO_COUNT))? 0 : 1;
-assign sync_n = hsync ^ vsync;
+assign blank_n = (H_counter >= 0) && ((H_counter > H_ACTIVE_VIDEO_COUNT) || (V_counter > V_ACTIVE_VIDEO_COUNT))? 0:1;
+assign sync_n = 1;//~(hsync ^ vsync);
 
 endmodule

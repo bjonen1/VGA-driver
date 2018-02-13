@@ -6,10 +6,10 @@
 module lab2_vga(
 
 	//////////// CLOCK //////////
-	input 		          		CLOCK_50,     // use this clock as your clock input
-	input 		          		CLOCK2_50,    // you don't have to use this one
-	input 		          		CLOCK3_50,    // you don't have to use this one
-	input 		          		CLOCK4_50,    // you don't have to use this one
+	input 		          		CLOCK2_50,
+	input 		          		CLOCK3_50,
+	input 		          		CLOCK4_50,
+	input 		          		CLOCK_50,
 
 	//////////// SEG7 //////////
 	output		     [6:0]		HEX0,
@@ -23,40 +23,68 @@ module lab2_vga(
 	input 		     [3:0]		KEY,
 
 	//////////// VGA //////////
-	output		     [7:0]		VGA_B,
 	output		          		VGA_BLANK_N,
+	output		     [7:0]		VGA_B,
 	output		          		VGA_CLK,
 	output		     [7:0]		VGA_G,
 	output		          		VGA_HS,
 	output		     [7:0]		VGA_R,
 	output		          		VGA_SYNC_N,
 	output		          		VGA_VS
+	
 );
 
-// Change these wire and reg definations as you wish.
-wire clk_25m;
-wire fifo_empty, fifo_full;
-wire [23:0] data_dp_fifo,picture_pixel,fifo_pixel_data;
-wire [12:0] mem_addr;
-wire locked_dcm;
-wire re;
-wire [12:0] display_address;
+//debug   
 
-wire [23:0] fifo_data_out;
-wire fifo_wr_en, fifo_rd_en;
-reg start_display;
+  assign HEX0 = rdreq;
+  assign HEX1 = wrreq;
+  assign HEX2 = rdempty;
+  assign HEX3 = locked;
+  assign HEX4 = q[6:0];
+  assign HEX5 = address[6:0];
+  
 
-// use PUSH BUTTON [0] to generate a low active reset signal
-wire rst = ~KEY[0];
+// press button[0] to generate a low active reset signal
+   wire reset = ~KEY[0];
 
-// Don't modify the code below
-assign HEX5 = 7'b0010010; //5
-assign HEX4 = 7'b0010010; //5
-assign HEX3 = 7'b0011001; //4
-assign HEX2 = 7'b1000000; //0
-assign HEX1 = 7'b1000000; //0
-assign HEX0 = 7'b0100100; //2
+//=======================================================
+//  REG/WIRE declarations
+//=======================================================
 
-// Add your logic for the VGA project
+	wire [23:0] ROM_data;
+	
+	wire[12:0] address;
+	wire [23:0] FIFO_data;
+	wire wrreq;
+	wire clk2, locked;
+	
+	
+	//new for FIFO instead of TB control
+	wire rdreq;
+	wire [23:0] q;
+	wire rdempty,wrfull;
+	wire [9:0] rdusedw;
+	wire [9:0] wrusedw;
+	
+
+
+//=======================================================
+//  Structural coding
+//=======================================================
+
+	
+	VGA25Mhz PLL25Mhz(CLOCK2_50,   //  refclk.clk
+		reset,      //   reset.reset
+		VGA_CLK, // outclk0.clk
+		locked);
+	
+	//assign clk2 = (~locked) ? 1 : ~KEY[0];
+	
+	display_plane display_plane1(CLOCK2_50,ROM_data,reset,wrusedw,address, FIFO_data, wrreq);
+	ROM2 rom2(address, CLOCK2_50, ROM_data);
+	//FIFO2 FIFO2(FIFO_data,VGA_CLK,rdreq,CLOCK2_50,wrreq,q,rdempty,rdusedw,wrfull,wrusedw);
+   FIFO3 FIFO3(reset, FIFO_data,VGA_CLK,rdreq,CLOCK2_50,wrreq,q,rdempty,rdusedw,wrfull,wrusedw);
+	timing_generator timing_generator1(.clk(VGA_CLK), .rst(reset), .fifo_empty(rdempty),.fifo_data(q),.fifo_rreq(rdreq), .red(VGA_R), 
+	.green(VGA_G), .blue(VGA_B), .hsync(VGA_HS), .vsync(VGA_VS), .sync_n(VGA_SYNC_N), .blank_n(VGA_BLANK_N));
 
 endmodule

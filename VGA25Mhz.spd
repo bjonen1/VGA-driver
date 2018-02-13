@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file path="VGA25Mhz_sim/VGA25Mhz.vo" type="VERILOG" />
+ <topLevel name="VGA25Mhz" />
+ <deviceFamily name="cyclonev" />
+</simPackage>
